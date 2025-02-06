@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+            }
+            
+            body {
+                background: black;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            canvas {
+                border: 1px solid white;
+            }
+            
+        </style>
+        
+    </head>
+    <body>
+        <canvas width="1200" height="800" id="game"></canvas>
+	<p id="score" style="color:white"></p>
+        <script>
+            var canvas = document.getElementById('game');
+            var context = canvas.getContext('2d');
+            
+            
+            var grid = 16;
+            var count = 0;
+            var speed = grid;
+	        var score = 0;
+            
+            var snake = {
+                x:160,
+                y:160,
+                
+                //snake velocity
+                dx: speed,
+                dy: 0,
+                
+                cells: [],
+                
+                maxCells: 4
+            };
+
+            var snake2 = {
+                x:768,
+                y:160,
+
+                //snake2 velocity
+                dx:-speed,
+                dy:0,
+
+                cells:[],
+
+                maxCells: 4
+            };
+            
+            var apple = {
+                x:320,
+                y:320
+            };
+
+            var bad_apple = {
+                x:128,
+                y:128
+            }
+            
+            function getRandomInt(min, max) {
+                return Math.floor(Math.random() * (max - min)) + min;
+            }
+            
+            //game loop
+            function loop() {
+                requestAnimationFrame(loop);
+                
+		        document.getElementById('score').innerHTML = "Score: " + score;
+                if (++count < 4){
+                    return;
+                }
+                
+                count = 0;
+                
+                context.clearRect(0,0,canvas.width,canvas.height);
+                
+                //move snake
+                snake.x += snake.dx;
+                snake.y += snake.dy;
+
+                //move snake 2
+                snake2.x += snake2.dx;
+                snake2.y += snake2.dy;
+                
+                //wrap snake
+                if (snake.x < 0){
+                    snake.x = canvas.width - grid;
+                }
+                else if (snake.x >= canvas.width){
+                    snake.x = 0;
+                }
+                
+                if (snake.y < 0){
+                    snake.y = canvas.height - grid;
+                }
+                else if (snake.y >= canvas.height){
+                    snake.y = 0;
+                }
+
+                //wrap snake2
+                if (snake2.x < 0){
+                    snake2.x = canvas.width - grid;
+                }
+                else if (snake2.x >= canvas.width){
+                    snake2.x = 0;
+                }
+                
+                if (snake2.y < 0){
+                    snake2.y = canvas.height - grid;
+                }
+                else if (snake2.y >= canvas.height){
+                    snake2.y = 0;
+                }
+                
+                
+                snake.cells.unshift({x: snake.x, y: snake.y});
+
+                snake2.cells.unshift({x: snake2.x, y: snake2.y});
+                
+                if(snake.cells.length > snake.maxCells){
+                    snake.cells.pop();
+                }
+
+                if(snake2.cells.length > snake2.maxCells){
+                    snake2.cells.pop();
+                }
+                
+                //draw apple
+                context.fillStyle = 'red';
+                context.fillRect(apple.x, apple.y, grid-1, grid-1);
+
+                //draw bad_apple
+                context.fillStyle = '#72FAAB';
+                context.fillRect(bad_apple.x, bad_apple.y, grid-1, grid-1);
+                
+                //draw snake 
+                context.fillStyle = 'green';
+                snake.cells.forEach(function(cell, index) {
+
+                    if(snake.cells.length > snake.maxCells){
+                    snake.cells.pop();
+                    }
+                    
+                    context.fillRect(cell.x, cell.y, grid-1, grid-1);
+                    
+                    if (cell.x === apple.x && cell.y === apple.y) {
+                        snake.maxCells++;
+                        snake2.maxCells++;
+			            score++;
+                    
+                        apple.x = getRandomInt(0,75) * grid;
+                        apple.y = getRandomInt(0,50) * grid;
+                    }
+
+                    if(cell.x === bad_apple.x && cell.y === bad_apple.y){
+                        snake.maxCells--;
+                        snake2.maxCells--;
+                        score--;
+
+                        bad_apple.x = getRandomInt(0,75) * grid;
+                        bad_apple.y = getRandomInt(0,50) * grid;
+                    }
+               
+                                    
+                for (var i = index + 1; i < snake.cells.length; i++) {
+                    
+                    if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+                        
+                        snake.x = 160;
+                        snake.y = 160;
+                        snake.cells = [];
+                        snake.maxCells = 4;
+                        snake.dx = speed;
+                        snake.dy = 0;
+			            score = 0;
+
+                        snake2.x = 768;
+                        snake2.y = 160;
+                        snake2.cells = [];
+                        snake2.maxCells = 4;
+                        snake2.dx = -speed;
+                        snake2.dy = 0;
+
+                        
+                        apple.x = getRandomInt(0,75) * grid;
+                        apple.y = getRandomInt(0,50) * grid;
+
+                        bad_apple.x = getRandomInt(0,75) * grid;
+                        bad_apple.y = getRandomInt(0,50) * grid;
+                    }
+                    
+                    }
+            });
+
+            //draw snake2 
+            context.fillStyle = 'salmon';
+                snake2.cells.forEach(function(cell, index) {
+
+                    if(snake2.cells.length > snake2.maxCells){
+                    snake2.cells.pop();
+                    }
+                    
+                    context.fillRect(cell.x, cell.y, grid-1, grid-1);
+                    
+                    if (cell.x === bad_apple.x && cell.y === bad_apple.y) {
+                        snake2.maxCells++;
+                        snake.maxCells++;
+			            score++;
+                    
+                        bad_apple.x = getRandomInt(0,75) * grid;
+                        bad_apple.y = getRandomInt(0,50) * grid;
+                    }
+
+                    if(cell.x === apple.x && cell.y === apple.y){
+                        snake2.maxCells--;
+                        snake.maxCells--;
+                        score--;
+
+                        apple.x = getRandomInt(0,75) * grid;
+                        apple.y = getRandomInt(0,50) * grid;
+                    }
+               
+                                    
+                for (var i = index + 1; i < snake.cells.length; i++) {
+                    
+                    if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+                        
+                        snake2.x = 760;
+                        snake2.y = 160;
+                        snake2.cells = [];
+                        snake2.maxCells = 4;
+                        snake2.dx = speed;
+                        snake2.dy = 0;
+			            score = 0;
+
+                        snake.x = 160;
+                        snake.y = 160;
+                        snake.cells = [];
+                        snake.maxCells = 4;
+                        snake.dx = speed;
+                        snake.dy = 0;
+                        
+                        apple.x = getRandomInt(0,75) * grid;
+                        apple.y = getRandomInt(0,50) * grid;
+
+                        bad_apple.x = getRandomInt(0,75) * grid;
+                        bad_apple.y = getRandomInt(0,50) * grid;
+                    }
+                    
+                    }
+            });
+           }
+            
+            document.addEventListener('keydown', function(e) {
+                
+                if ((e.which === 65 || e.which === 37) && snake.dx === 0) {
+                    snake.dx = -speed;
+                    snake.dy = 0;
+                    snake2.dx = -snake.dx;
+                    snake2.dy = 0;
+                }
+                
+                if ((e.which === 87 || e.which === 38) && snake.dy === 0) {
+                    snake.dy = -speed;
+                    snake.dx = 0;
+                    snake2.dy = -snake.dy;
+                    snake2.dx = 0;
+                }
+                
+                if ((e.which === 68 || e.which === 39) && snake.dx === 0) {
+                    snake.dx = speed;
+                    snake.dy = 0;
+                    snake2.dx = -snake.dx;
+                    snake2.dy = 0;
+                }
+                
+                if ((e.which === 83 || e.which === 40) && snake.dy === 0) {
+                    snake.dy = speed;
+                    snake.dx = 0;
+                    snake2.dy = -snake.dy;
+                    snake2.dx = 0;
+                }
+            });
+                
+                
+                
+            requestAnimationFrame(loop);
+        </script>
+    </body>
+</html>
+
